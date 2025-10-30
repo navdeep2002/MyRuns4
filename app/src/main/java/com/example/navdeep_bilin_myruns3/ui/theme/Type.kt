@@ -1,4 +1,4 @@
-package com.example.navdeep_bilin_myruns2.ui.theme
+package com.example.navdeep_bilin_myruns3.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

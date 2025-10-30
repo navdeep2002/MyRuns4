@@ -1,6 +1,5 @@
-package com.example.navdeep_bilin_myruns2.ui.theme
+package com.example.navdeep_bilin_myruns3.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

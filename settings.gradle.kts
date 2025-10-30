@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Navdeep_Bilin_MyRuns2"
+rootProject.name = "Navdeep_Bilin_MyRuns3"
 include(":app")
