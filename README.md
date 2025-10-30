@@ -1,8 +1,3 @@
-I would like to use my Free Pass for this assignment. I suffered a seizure on the morning of 
-october 2 for which i was taken to the emergency room by ambulance services. i've notified the CS 
-chair and they should've emailed the professor regarding it. I myself emailed prof however I 
-didn't receive an email back and so hence im using the Free Pass.
-
 BELOW IS A README FOR ALL MY FILES IN BRIEF REGARDING (REFERENCES ADAPTATIONS, AND AI USE)
 
 File: MainActivity.kt
