@@ -9,9 +9,17 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.navdeep_bilin_myruns3.data.MyRunsDatabase
+import com.example.navdeep_bilin_myruns3.data.ExerciseEntryEntity
+import com.example.navdeep_bilin_myruns3.data.ExerciseRepository
+import com.example.navdeep_bilin_myruns3.util.Units
+import kotlinx.coroutines.launch
 import java.util.Calendar
+
 
 class ManualEntryActivity : AppCompatActivity() {
 
@@ -21,7 +29,7 @@ class ManualEntryActivity : AppCompatActivity() {
     private lateinit var rowDistance: View
     private lateinit var rowCalories: View
     private lateinit var rowHeartRate: View
-    private lateinit var rowComment: View   // adaption of my own, new comment row for project
+    private lateinit var rowComment: View
 
     private lateinit var tvDateValue: TextView
     private lateinit var tvTimeValue: TextView
@@ -29,19 +37,19 @@ class ManualEntryActivity : AppCompatActivity() {
     private lateinit var tvDistanceValue: TextView
     private lateinit var tvCaloriesValue: TextView
     private lateinit var tvHeartRateValue: TextView
-    private lateinit var tvCommentValue: TextView   // adaptation to match new comment row
+    private lateinit var tvCommentValue: TextView
 
     private lateinit var btnSave: Button
     private lateinit var btnCancel: Button
 
-    //  Date dialog state
+    // Date dialog state
     private var dateDialog: DatePickerDialog? = null
     private var isDateDialogShowing = false
     private var dateYear = 0
     private var dateMonth = 0
     private var dateDay = 0
 
-    //  Time dialog state
+    // Time dialog state
     private var timeDialog: TimePickerDialog? = null
     private var isTimeDialogShowing = false
     private var timeHour = 0
@@ -61,8 +69,6 @@ class ManualEntryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manual_entry)
-
-        // lecture reference for findViewById
         supportActionBar?.title = getString(R.string.app_name)
 
         // Rows
@@ -72,192 +78,169 @@ class ManualEntryActivity : AppCompatActivity() {
         rowDistance = findViewById(R.id.rowDistance)
         rowCalories = findViewById(R.id.rowCalories)
         rowHeartRate = findViewById(R.id.rowHeartRate)
-        rowComment = findViewById(R.id.rowComment)  // previous adaptation
+        rowComment = findViewById(R.id.rowComment)
 
-        // Value views
+        // Values
         tvDateValue = findViewById(R.id.tvDateValue)
         tvTimeValue = findViewById(R.id.tvTimeValue)
         tvDurationValue = findViewById(R.id.tvDurationValue)
         tvDistanceValue = findViewById(R.id.tvDistanceValue)
         tvCaloriesValue = findViewById(R.id.tvCaloriesValue)
         tvHeartRateValue = findViewById(R.id.tvHeartRateValue)
-        tvCommentValue = findViewById(R.id.tvCommentValue)  // adapted as well from lectures
+        tvCommentValue = findViewById(R.id.tvCommentValue)
 
         btnSave = findViewById(R.id.btnSave)
         btnCancel = findViewById(R.id.btnCancel)
 
-        // Restore state after rotation extended to dialogs and fields
-        // referenced from lecture but written in my own implementation
+        // Restore dialogs after rotation
         savedInstanceState?.let { b ->
-            // Date
             isDateDialogShowing = b.getBoolean(STATE_DATE_SHOWING, false)
             dateYear = b.getInt(STATE_DATE_YEAR, 0)
             dateMonth = b.getInt(STATE_DATE_MONTH, 0)
             dateDay = b.getInt(STATE_DATE_DAY, 0)
-            if (isDateDialogShowing) {
-                showDateDialog(dateYear, dateMonth, dateDay)
-            }
+            if (isDateDialogShowing) showDateDialog(dateYear, dateMonth, dateDay)
 
-            // Time
             isTimeDialogShowing = b.getBoolean(STATE_TIME_SHOWING, false)
             timeHour = b.getInt(STATE_TIME_HOUR, 0)
             timeMinute = b.getInt(STATE_TIME_MINUTE, 0)
-            if (isTimeDialogShowing) {
-                showTimeDialog(timeHour, timeMinute)
-            }
+            if (isTimeDialogShowing) showTimeDialog(timeHour, timeMinute)
         }
 
-        // Open Date picker dialog on a row click using the defaults of the calendar
-        // adapted from lecture content
+        // Pickers
         rowDate.setOnClickListener {
             val cal = Calendar.getInstance()
-            showDateDialog(
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            )
+            showDateDialog(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
         }
-
-        // Open Time picker dialog (12-hour, with AM/PM)
-        // also adapted from lecture content
         rowTime.setOnClickListener {
             val cal = Calendar.getInstance()
-            showTimeDialog(
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.get(Calendar.MINUTE)
-            )
+            showTimeDialog(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
         }
 
-        // adapted from lectures; reusable numerical input dialogs for several rows
+        // Numeric dialogs → write into the target TextView
         rowDuration.setOnClickListener {
-            showIntegerDialog(title = "Enter the duration", hint = "Minutes")
+            showDecimalDialog(target = tvDurationValue, title = "Enter the duration (minutes)", hint = "Minutes")
         }
+
         rowDistance.setOnClickListener {
-            showIntegerDialog(title = "Enter the distance", hint = "Meters")
+            val isMetric = Units.system(this) == Units.System.METRIC
+            val unitHint = if (isMetric) "Kilometers" else "Miles"
+            showDecimalDialog(target = tvDistanceValue, title = "Enter the distance ($unitHint)", hint = unitHint)
         }
+
         rowCalories.setOnClickListener {
-            showIntegerDialog(title = "Enter the calories", hint = "kcal")
+            showNumberDialog(target = tvCaloriesValue, title = "Enter the calories", hint = "kcal")
         }
+
         rowHeartRate.setOnClickListener {
-            showIntegerDialog(title = "Enter the heart rate", hint = "BPM")
+            showNumberDialog(target = tvHeartRateValue, title = "Enter the heart rate", hint = "BPM")
         }
 
-        // Comment dialog with multiline input
-        rowComment.setOnClickListener {
-            showCommentDialog()
-        }
+        rowComment.setOnClickListener { showCommentDialog(tvCommentValue) }
 
-        // adapted from lecture content, to return to previous screen
-        btnSave.setOnClickListener { finish() }
+        // Buttons
+        btnSave.setOnClickListener { persistEntry() }
         btnCancel.setOnClickListener { finish() }
     }
 
-    // lecture referenced for date picker dialog to use with listeners
+    // --- Dialog helpers ------------------------------------------------------
+
     private fun showDateDialog(year: Int, month: Int, day: Int) {
         dateDialog?.dismiss()
         dateDialog = DatePickerDialog(
             this,
             { _, y, m, d ->
-                dateYear = y
-                dateMonth = m
-                dateDay = d
+                dateYear = y; dateMonth = m; dateDay = d
+                tvDateValue.text = String.format("%04d-%02d-%02d", y, m + 1, d)
             },
             year, month, day
         ).apply {
-            setOnShowListener { isDateDialogShowing = true } // allows to track visibility during rotation
-            setOnDismissListener { isDateDialogShowing = false } // also adapted from lecture
+            setOnShowListener { isDateDialogShowing = true }
+            setOnDismissListener { isDateDialogShowing = false }
             show()
         }
     }
 
     private fun showTimeDialog(hour24: Int, minute: Int) {
-        // adapted from lecture to fit my implementation
-        // forces a 12 hour view for consistency
         timeDialog?.dismiss()
         timeDialog = TimePickerDialog(
             this,
             { _, hOfDay, m ->
-                timeHour = hOfDay
-                timeMinute = m
+                timeHour = hOfDay; timeMinute = m
+                // show in HH:mm
+                tvTimeValue.text = String.format("%02d:%02d", hOfDay, m)
             },
             hour24, minute, false
         ).apply {
-            setOnShowListener {
-                isTimeDialogShowing = true
-                try {
-                    // use of AI here is heavy, used it to find andoird by the internal id and call
-                    // to set false to the 24 hour view, not covered in lecture
-                    val tpId = resources.getIdentifier("timePicker", "id", "android")
-                    val tp = findViewById<android.widget.TimePicker?>(tpId)
-                    tp?.setIs24HourView(false)
-                } catch (_: Throwable) { }
-            }
+            setOnShowListener { isTimeDialogShowing = true }
             setOnDismissListener { isTimeDialogShowing = false }
             show()
         }
     }
 
-    private fun showIntegerDialog(title: String, hint: String) {
-
-        // adapted to my implementation, referened from lecture, for a shared numerical
-        // dialog helper that includes a max length cap
+    private fun showNumberDialog(target: TextView, title: String, hint: String) {
         val input = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             setHint(hint)
             filters = arrayOf(InputFilter.LengthFilter(6))
         }
-
         AlertDialog.Builder(this)
             .setTitle(title)
             .setView(input)
-            .setPositiveButton("OK") { dlg, _ -> dlg.dismiss() } // lecture reference for alert dialog pattern
+            .setPositiveButton("OK") { dlg, _ ->
+                target.text = input.text.toString()
+                dlg.dismiss()
+            }
             .setNegativeButton("Cancel") { dlg, _ -> dlg.dismiss() }
             .show()
     }
 
-    private fun showCommentDialog() {
+    private fun showDecimalDialog(target: TextView, title: String, hint: String) {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setHint(hint)
+            filters = arrayOf(InputFilter.LengthFilter(8))
+        }
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setView(input)
+            .setPositiveButton("OK") { dlg, _ ->
+                target.text = input.text.toString()
+                dlg.dismiss()
+            }
+            .setNegativeButton("Cancel") { dlg, _ -> dlg.dismiss() }
+            .show()
+    }
 
-        // adapted to my own implementation from lectures
-        // multi-line text dialog for comments
+    private fun showCommentDialog(target: TextView) {
         val input = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setHint("Enter your comment")
         }
-
         AlertDialog.Builder(this)
             .setTitle("Enter Comment")
             .setView(input)
-            .setPositiveButton("OK") { dlg, _ -> dlg.dismiss() }
+            .setPositiveButton("OK") { dlg, _ ->
+                target.text = input.text.toString()
+                dlg.dismiss()
+            }
             .setNegativeButton("Cancel") { dlg, _ -> dlg.dismiss() }
             .show()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
+    // --- State ---------------------------------------------------------------
 
-        // adapted from lecture but in my own implementation
-        // Save current Date dialog values
+    override fun onSaveInstanceState(outState: Bundle) {
         dateDialog?.datePicker?.let {
-            dateYear = it.year
-            dateMonth = it.month
-            dateDay = it.dayOfMonth
+            dateYear = it.year; dateMonth = it.month; dateDay = it.dayOfMonth
         }
         outState.putBoolean(STATE_DATE_SHOWING, dateDialog?.isShowing == true || isDateDialogShowing)
         outState.putInt(STATE_DATE_YEAR, dateYear)
         outState.putInt(STATE_DATE_MONTH, dateMonth)
         outState.putInt(STATE_DATE_DAY, dateDay)
 
-        // Save current Time dialog values, reads from picker when visiable
         timeDialog?.let { dlg ->
             if (dlg.isShowing) {
-                try {
-                    // minimal AI use here; reading hour and minute from picker
-                    val tpId = resources.getIdentifier("timePicker", "id", "android")
-                    val tp = dlg.findViewById<android.widget.TimePicker?>(tpId)
-                    if (tp != null) {
-                        timeHour = tp.hour
-                        timeMinute = tp.minute
-                    }
-                } catch (_: Throwable) { }
+                // No need to dig the internal picker; we already track hour/minute
             }
         }
         outState.putBoolean(STATE_TIME_SHOWING, timeDialog?.isShowing == true || isTimeDialogShowing)
@@ -265,5 +248,63 @@ class ManualEntryActivity : AppCompatActivity() {
         outState.putInt(STATE_TIME_MINUTE, timeMinute)
 
         super.onSaveInstanceState(outState)
+    }
+
+    // --- Persist -------------------------------------------------------------
+
+    private fun persistEntry() {
+        // Build datetime from pickers; default to "now" if none selected
+        val cal = Calendar.getInstance().apply {
+            if (dateYear != 0) {
+                set(Calendar.YEAR, dateYear)
+                set(Calendar.MONTH, dateMonth)
+                set(Calendar.DAY_OF_MONTH, dateDay)
+            }
+            if (!(timeHour == 0 && timeMinute == 0 && tvTimeValue.text.isNullOrBlank())) {
+                set(Calendar.HOUR_OF_DAY, timeHour)
+                set(Calendar.MINUTE, timeMinute)
+            }
+        }
+        val dateTimeMillis = cal.timeInMillis
+
+        // Activity type comes from Start tab usually; read extra, default 0
+        val activityTypeIndex = intent.getIntExtra("activity_type", 0)
+
+        // Distance: entered in user's preferred unit; convert to meters for DB
+        val distanceUser = tvDistanceValue.text.toString().toDoubleOrNull() ?: 0.0
+        val distanceMeters = Units.preferredToMeters(this, distanceUser)
+
+        // Duration: minutes integer → seconds
+        val durationMinutes = tvDurationValue.text.toString().toDoubleOrNull() ?: 0.0
+        val durationSec = durationMinutes * 60.0
+
+        val calories = tvCaloriesValue.text.toString().toDoubleOrNull()
+        val heart = tvHeartRateValue.text.toString().toDoubleOrNull()
+        val comment = tvCommentValue.text?.toString()
+
+        val db = MyRunsDatabase.getInstance(this)
+        val repo = ExerciseRepository(db.exerciseEntryDao())
+
+        val entry = ExerciseEntryEntity(
+            id = 0L,
+            inputType = 0,                  // Manual
+            activityType = activityTypeIndex,
+            dateTimeMillis = dateTimeMillis,
+            durationSec = durationSec,
+            distanceMeters = distanceMeters,
+            avgPace = null,
+            avgSpeed = null,
+            calorie = calories,
+            climbMeters = null,
+            heartRate = heart,
+            comment = comment,
+            locationBlob = null
+        )
+
+        lifecycleScope.launch {
+            val id = repo.insert(entry)
+            Toast.makeText(this@ManualEntryActivity, "#entry $id saved", Toast.LENGTH_SHORT).show()
+            finish() // back to MainActivity (tabs). History LiveData will refresh automatically.
+        }
     }
 }
