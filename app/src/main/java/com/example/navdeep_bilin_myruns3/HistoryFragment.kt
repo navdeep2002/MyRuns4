@@ -58,6 +58,7 @@ class HistoryFragment : Fragment() {
             mutableListOf()
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                // distance is formatted  from meters using current user pref
                 val row = super.getView(position, convertView, parent)
                 val title = row.findViewById<TextView>(android.R.id.text1)
                 val subtitle = row.findViewById<TextView>(android.R.id.text2)
@@ -81,6 +82,7 @@ class HistoryFragment : Fragment() {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
+        // rebind adpater whenever DB emits
 
         // Observe DB changes and update UI automatically
         viewModel.entriesLiveData.observe(viewLifecycleOwner) { entries ->
@@ -124,3 +126,19 @@ class HistoryFragment : Fragment() {
     }
 
 }
+
+// * Responsibilities:
+// *  - Observe entries LiveData and render a two-line list (title + subtitle)
+// *  - Title: "<Input type>: <Activity>, <Time> <Date>"
+// *  - Subtitle: "<Distance in user units>, <Duration mins secs>"
+// *  - Open DisplayEntryActivity for manual entries; MapActivity for others (MR4)
+
+// * Unit switching:
+// *  - Registers a SharedPreferences listener; calls adapter.notifyDataSetChanged()
+// *    so Units.formatDistance() re-evaluates with new preference
+
+// * Lifecycle:
+// *  - Observe with viewLifecycleOwner to avoid stale observers
+
+// * AI notice:
+// *  - The lightweight preference listener to refresh rows on-the-fly was suggested by AI

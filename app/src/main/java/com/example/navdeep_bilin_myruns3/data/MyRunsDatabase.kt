@@ -14,10 +14,10 @@ abstract class MyRunsDatabase : RoomDatabase() {
     abstract fun exerciseEntryDao(): ExerciseEntryDao
 
     companion object {
-        @Volatile private var INSTANCE: MyRunsDatabase? = null
+        @Volatile private var INSTANCE: MyRunsDatabase? = null // enforces single instance
 
         fun getInstance(context: Context): MyRunsDatabase =
-            INSTANCE ?: synchronized(this) {
+            INSTANCE ?: synchronized(this) { // double check locking pattern
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     MyRunsDatabase::class.java,
@@ -26,3 +26,10 @@ abstract class MyRunsDatabase : RoomDatabase() {
             }
     }
 }
+
+// * Responsibilities:
+// *  - Builds and exposes the database and DAO
+// *  - Enforces single instance via @Volatile + synchronized getInstance
+// *
+// * Migration:
+// *  - Bump version when schema changes and define proper migrations

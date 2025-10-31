@@ -7,6 +7,7 @@ import kotlin.math.roundToInt
 object Units {
     enum class System { METRIC, IMPERIAL }
 
+    // reads 'pref_units' key when present and a boolean fallback
     fun system(ctx: android.content.Context): System {
         val sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
 
@@ -23,9 +24,10 @@ object Units {
 
     fun metersToPreferred(context: Context, meters: Double): Pair<Double, String> {
         return if (system(context) == System.METRIC) metersToKm(meters) to "Kilometers"
-        else metersToMiles(meters) to "Miles"
+        else metersToMiles(meters) to "Miles" // convert and label based on user Preference
     }
 
+    // converts users input to meters
     fun preferredToMeters(ctx: android.content.Context, value: Double): Double =
         if (system(ctx) == System.METRIC) value * 1000.0 else value * 1609.344
 
@@ -38,23 +40,39 @@ object Units {
         if (system(ctx) == System.METRIC)
             String.format(java.util.Locale.getDefault(), "%.2f Kilometers", meters / 1000.0)
         else
+            // user facing distance string
             String.format(java.util.Locale.getDefault(), "%.2f Miles", meters / 1609.344)
 
     fun minutesSecondsFromDecimalMinutes(decimalMinutes: Double): Pair<Int, Int> {
         val mins = decimalMinutes.toInt()
         val secs = ((decimalMinutes - mins) * 60.0).roundToInt()
+        // handles the 60 second edge case, here it will round up
         return if (secs == 60) mins + 1 to 0 else mins to secs
     }
 
     fun formatDurationFromDecimalMinutes(decimalMinutes: Double): String {
         val (m, s) = minutesSecondsFromDecimalMinutes(decimalMinutes)
-        return "${m}mins ${s}secs"
+        return "${m}mins ${s}secs" // converts decimal inputs to respective min,sec
     }
 
+    // converts total seocnds to "M mins S Secs" per entry
     fun formatDurationFromSeconds(seconds: Double): String {
         val total = seconds.toInt()
         val m = total / 60
         val s = total % 60
-        return "${m}mins ${s}secs"
+        return "${m}mins ${s}secs" // converts raw seconds to readable format
     }
 }
+
+
+// * Responsibilities:
+// *  - Detect user's unit system from SharedPreferences
+// *  - Convert preferred units to meters for storage
+// *  - Format display strings in km or miles
+// *  - Format duration "Xmins Ysecs" from seconds
+// * Preference compatibility:
+// *  - Supports ListPreference ("pref_units" values "km"/"mi") and a boolean fallback
+// *
+// * AI notice:
+// *  - The system(ctx) function was adapted with AI assistance to support both
+// *    string and boolean preference styles safely

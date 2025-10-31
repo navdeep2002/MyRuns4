@@ -36,6 +36,7 @@ class DisplayEntryActivity : AppCompatActivity() {
     private var currentEntry: ExerciseEntryEntity? = null
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "pref_key_use_metric") {
+            // centralizes all textview entries so we can re run on unit change
             currentEntry?.let { bindUi(it) } // re-render with new units
         }
     }
@@ -113,3 +114,16 @@ class DisplayEntryActivity : AppCompatActivity() {
         return names.getOrNull(type) ?: "Unknown"
     }
 }
+
+// * Responsibilities:
+// *  - Observe one entry via ViewModel and bind UI
+// *  - Delete on button press and return to History
+// *  - React to unit preference changes and re-render distance instantly
+
+// * Lifecycle:
+// *  - Registers a SharedPreferences listener in onResume; unregisters in onPause
+// *  - Rebinds UI when "pref_units" changes
+
+// * AI notice:
+// *  - The SharedPreferences change listener pattern used here was implemented with AI assistance
+// *    to ensure dynamic unit switching without Activity restart

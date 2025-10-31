@@ -40,3 +40,13 @@ class DisplayEntryVMFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+
+// * Responsibilities:
+// *  - Load one ExerciseEntry by id
+// *  - Expose it as LiveData for the Activity to observe
+// *  - Delete the entry on request
+
+// * Threading:
+// *  - Repository work runs on Dispatchers.IO inside viewModelScope
+

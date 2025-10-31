@@ -15,3 +15,12 @@ class ExerciseRepository(
     suspend fun getById(id: Long): ExerciseEntryEntity? = withContext(io) { dao.getById(id) }
     suspend fun deleteById(id: Long) = withContext(io) { dao.deleteById(id) }
 }
+
+
+// * Responsibilities:
+// *  - Provide a clean API to ViewModels
+// *  - Keep coroutines off the main thread (Dispatchers.IO)
+// * Returned streams:
+// *  - allEntries: Flow<List<ExerciseEntryEntity>> directly from DAO
+// * Why repository:
+// *  - Maintains MVVM boundaries and is ready for adding a remote source later

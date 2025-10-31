@@ -194,6 +194,7 @@ class ManualEntryActivity : AppCompatActivity() {
             .show()
     }
 
+    // writes back to tvDurationValue, here decimals are allowed
     private fun showDecimalDialog(target: TextView, title: String, hint: String) {
         val input = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -292,8 +293,6 @@ class ManualEntryActivity : AppCompatActivity() {
             dateTimeMillis = dateTimeMillis,
             durationSec = durationSec,
             distanceMeters = distanceMeters,
-            avgPace = null,
-            avgSpeed = null,
             calorie = calories,
             climbMeters = null,
             heartRate = heart,
@@ -308,3 +307,16 @@ class ManualEntryActivity : AppCompatActivity() {
         }
     }
 }
+
+// * Responsibilities:
+// *  - Collect input via row dialogs (date, time, duration, distance, calories, heart rate, comment)
+// *  - Duration accepts integer or decimal minutes; stored as seconds
+// *  - Distance input prompt reflects user unit preference, value converted to meters for DB
+// *  - Save inserts ExerciseEntryEntity on IO thread and shows a short confirmation
+
+// * Rotation:
+// *  - Preserves open dialogs and their values across configuration changes
+
+// * AI notice:
+// *  - The decimal duration handling and conversion to "mins secs" display used brief AI help
+// *    to ensure correct rounding and formatting
