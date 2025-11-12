@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.navdeep_bilin_myruns3">
+    package="com.example.navdeep_bilin_myruns4">
 
     <!-- Features -->
     <uses-feature
@@ -24,14 +24,14 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Navdeep_Bilin_MyRuns3">
+        android:theme="@style/Theme.Navdeep_Bilin_MyRuns4">
 
         <!-- Launcher activity: hosts tabs (Start/History/Settings) -->
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.navdeep_bilin_myruns4.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Navdeep_Bilin_MyRuns3">
+            android:theme="@style/Theme.Navdeep_Bilin_MyRuns4">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -39,31 +39,31 @@
         </activity>
 
         <activity
-            android:name=".MapActivity"
+            android:name="com.example.navdeep_bilin_myruns4.MapActivity"
             android:exported="false"
             android:label="Maps" />
 
         <activity
-            android:name=".ManualEntryActivity"
+            android:name="com.example.navdeep_bilin_myruns4.ManualEntryActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Navdeep_Bilin_MyRuns3" />
+            android:theme="@style/Theme.Navdeep_Bilin_MyRuns4" />
 
 
         <!-- Profile screen (navigated to from Settings) -->
         <activity
-            android:name=".ProfileActivity"
+            android:name="com.example.navdeep_bilin_myruns4.ProfileActivity"
             android:exported="false"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Navdeep_Bilin_MyRuns3" />
+            android:theme="@style/Theme.Navdeep_Bilin_MyRuns4" />
 
         <!-- Display entry screen (MR3) -->
         <activity
-            android:name=".DisplayEntryActivity"
+            android:name="com.example.navdeep_bilin_myruns4.DisplayEntryActivity"
             android:exported="false"
             android:label="Entry Details"
-            android:theme="@style/Theme.Navdeep_Bilin_MyRuns3" />
+            android:theme="@style/Theme.Navdeep_Bilin_MyRuns4" />
 
         <!-- FileProvider for camera output Uris -->
         <provider

@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.navdeep_bilin_myruns3"
+    namespace = "com.example.navdeep_bilin_myruns4"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.navdeep_bilin_myruns3"
+        applicationId = "com.example.navdeep_bilin_myruns4"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
