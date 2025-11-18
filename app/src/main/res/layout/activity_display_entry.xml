@@ -28,10 +28,34 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="DELETE"
-            android:textAllCaps="false"/>
+            android:textAllCaps="false" />
     </LinearLayout>
 
-    <!-- Scrollable content area -->
+    <!-- Map + overlay stats: visible only for GPS entries -->
+    <FrameLayout
+        android:id="@+id/mapFrame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:layout_marginBottom="12dp">
+
+        <fragment
+            android:id="@+id/detailMap"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tvMapStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:background="#66000000"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </FrameLayout>
+
+    <!-- Scrollable content area (MR3-style summary) -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

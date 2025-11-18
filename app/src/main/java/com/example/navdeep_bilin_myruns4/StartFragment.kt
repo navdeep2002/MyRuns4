@@ -27,13 +27,34 @@ class StartFragment : Fragment() {
 
         btnStart.setOnClickListener {
 
-            val inputPos = spInput.selectedItemPosition  // 0=Manual, 1=GPS, 2=Automatic
+            /*val inputPos = spInput.selectedItemPosition  // 0=Manual, 1=GPS, 2=Automatic
 
             if (inputPos == 1 || inputPos == 2) {
                 // GPS or Automatic -> open blank Maps page
                 startActivity(Intent(requireContext(), MapActivity::class.java))
             } else {
                 startActivity(Intent(requireContext(), ManualEntryActivity::class.java))
+            }*/
+
+            val spInput  = view.findViewById<Spinner>(R.id.spInputType)
+            val spActivity = view.findViewById<Spinner>(R.id.spActivityType)
+
+            val inputPos = spInput.selectedItemPosition      // 0-Manual, 1-GPS, 2-Automatic
+            val activityPos = spActivity.selectedItemPosition   // walking / running / biking …
+
+            if (inputPos == 1 || inputPos == 2) {
+                // GPS or Automatic → open MapActivity
+                val intent = Intent(requireContext(), MapActivity::class.java).apply {
+                    putExtra("input_type", inputPos)
+                    putExtra("activity_type", activityPos)
+                }
+                startActivity(intent)
+            } else {
+                // Manual
+                val intent = Intent(requireContext(), ManualEntryActivity::class.java).apply {
+                    putExtra("activity_type", activityPos)
+                }
+                startActivity(intent)
             }
         }
     }

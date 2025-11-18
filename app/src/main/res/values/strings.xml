@@ -31,6 +31,9 @@
     <string name="btn_save">Save</string>
     <string name="btn_cancel">Cancel</string>
 
+    <string name="google_maps_key">[insert maps key here]</string>
+
+
     <string-array name="input_types">
         <item>Manual Entry</item>
         <item>GPS</item>

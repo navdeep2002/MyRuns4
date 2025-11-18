@@ -20,7 +20,6 @@ import com.example.navdeep_bilin_myruns4.viewmodel.HistoryViewModelFactory
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 
-
 class HistoryFragment : Fragment() {
 
     private lateinit var listView: ListView
@@ -31,7 +30,7 @@ class HistoryFragment : Fragment() {
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "pref_key_use_metric") {
-            // Rebind rows so Units.formatDistance() re-runs with new preference
+            // Rebind rows so Units.formatDistance() re runs with new preference
             adapter.notifyDataSetChanged()
         }
     }
@@ -44,13 +43,13 @@ class HistoryFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
         listView = view.findViewById(R.id.history_list)
 
-        // Initialize database + repository + ViewModel
+        // Initialize database, repository, and ViewModel
         val db = MyRunsDatabase.getInstance(requireContext())
         val repo = ExerciseRepository(db.exerciseEntryDao())
         val factory = HistoryViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory)[HistoryViewModel::class.java]
 
-        // Adapter with two-line layout
+        // Adapter with two line layout
         adapter = object : ArrayAdapter<ExerciseEntryEntity>(
             requireContext(),
             android.R.layout.simple_list_item_2,
@@ -58,7 +57,6 @@ class HistoryFragment : Fragment() {
             mutableListOf()
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                // distance is formatted  from meters using current user pref
                 val row = super.getView(position, convertView, parent)
                 val title = row.findViewById<TextView>(android.R.id.text1)
                 val subtitle = row.findViewById<TextView>(android.R.id.text2)
@@ -71,8 +69,9 @@ class HistoryFragment : Fragment() {
                         activityName(entry.activityType),
                         entry.dateTimeMillis
                     )
-                    subtitle.text = "${Units.formatDistance(requireContext(), entry.distanceMeters)}, " +
-                            Units.formatDurationFromSeconds(entry.durationSec)
+                    subtitle.text =
+                        "${Units.formatDistance(requireContext(), entry.distanceMeters)}, " +
+                                Units.formatDurationFromSeconds(entry.durationSec)
                 }
                 return row
             }
@@ -82,8 +81,6 @@ class HistoryFragment : Fragment() {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
-        // rebind adpater whenever DB emits
-
         // Observe DB changes and update UI automatically
         viewModel.entriesLiveData.observe(viewLifecycleOwner) { entries ->
             adapter.clear()
@@ -91,18 +88,13 @@ class HistoryFragment : Fragment() {
             adapter.notifyDataSetChanged()
         }
 
-        // Click listener → open DisplayEntryActivity or MapActivity
+        // Click listener → always open DisplayEntryActivity
         listView.setOnItemClickListener { _, _, position, _ ->
-            val entry = adapter.getItem(position)
-            if (entry != null) {
-                val intent = if (entry.inputType == 0)
-                    Intent(requireContext(), DisplayEntryActivity::class.java)
-                else
-                    Intent(requireContext(), MapActivity::class.java)
-
-                intent.putExtra("ENTRY_ID", entry.id)
-                startActivity(intent)
+            val entry = adapter.getItem(position) ?: return@setOnItemClickListener
+            val intent = Intent(requireContext(), DisplayEntryActivity::class.java).apply {
+                putExtra("ENTRY_ID", entry.id)
             }
+            startActivity(intent)
         }
 
         return view
@@ -116,7 +108,7 @@ class HistoryFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
-        // defensively rebind in case we switched tabs right at insert commit time
+        // Defensively rebind in case we switched tabs right at insert commit time
         adapter.notifyDataSetChanged()
     }
 
@@ -124,21 +116,24 @@ class HistoryFragment : Fragment() {
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
         super.onPause()
     }
-
 }
 
-// * Responsibilities:
-// *  - Observe entries LiveData and render a two-line list (title + subtitle)
-// *  - Title: "<Input type>: <Activity>, <Time> <Date>"
-// *  - Subtitle: "<Distance in user units>, <Duration mins secs>"
-// *  - Open DisplayEntryActivity for manual entries; MapActivity for others (MR4)
-
-// * Unit switching:
-// *  - Registers a SharedPreferences listener; calls adapter.notifyDataSetChanged()
-// *    so Units.formatDistance() re-evaluates with new preference
-
-// * Lifecycle:
-// *  - Observe with viewLifecycleOwner to avoid stale observers
-
-// * AI notice:
-// *  - The lightweight preference listener to refresh rows on-the-fly was suggested by AI
+/*
+ * Responsibilities:
+ *  - Observe entries LiveData and render a two line list (title plus subtitle)
+ *  - Title: "<Input type>: <Activity>, <Time> <Date>"
+ *  - Subtitle: "<Distance in user units>, <Duration mins secs>"
+ *  - Open DisplayEntryActivity for all entries
+ *      Manual entries show text only
+ *      GPS and Automatic entries can show a map if locationBlob is present
+ *
+ * Unit switching:
+ *  - Registers a SharedPreferences listener; calls adapter.notifyDataSetChanged()
+ *    so Units.formatDistance() re evaluates with new preference
+ *
+ * Lifecycle:
+ *  - Observe with viewLifecycleOwner to avoid stale observers
+ *
+ * AI notice:
+ *  - The lightweight preference listener to refresh rows on the fly was suggested by AI
+ */
